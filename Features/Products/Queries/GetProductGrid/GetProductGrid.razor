@@ -1,0 +1,153 @@
+@page "/products"
+@using MediatR
+@using Radzen
+@using Radzen.Blazor
+@using Void.Chef.Features.Products.Commands
+@using Void.Chef.Features.Products.Shared
+@inject ISender Sender
+@inject DialogService DialogService
+
+<h1>Products</h1>
+
+<RadzenStack>
+    <RadzenStack AlignItems="AlignItems.End">
+        <RadzenButton Text="New" Click="@((e) => OnNewButtonClick())"></RadzenButton>
+    </RadzenStack>
+    <RadzenStack>
+        <RadzenDataGrid
+            TItem="GetProductGridResponse"
+            Data="@products"
+            AllowFiltering="true"
+            AllowPaging="true"
+            PageSize="20"
+            AllowSorting="true">
+            <Columns>
+                <RadzenDataGridColumn
+                    Title="Name"
+                    Property="Name"></RadzenDataGridColumn>
+                <RadzenDataGridColumn
+                    Title="Quantity"
+                    Property="Quantity">
+                    <Template Context="product">
+                        @($"{product.Quantity} {product.UnitOfMeasure.Name}")
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn
+                    Title="Category"
+                    Property="Category.Name"></RadzenDataGridColumn>
+                <RadzenDataGridColumn
+                    TextAlign="TextAlign.End"
+                    Width="100px"
+                    Filterable="false"
+                    Sortable="false"
+                    Context="product">
+                    <Template Context="product">
+                        <RadzenButton
+                            Icon="edit"
+                            ButtonStyle="ButtonStyle.Light"
+                            Variant="Variant.Flat"
+                            Click="@(() => OnEditButtonClick(product))">
+                        </RadzenButton>
+                        <RadzenButton
+                            Icon="delete"
+                            ButtonStyle="ButtonStyle.Danger"
+                            Variant="Variant.Flat"
+                            Click="@(() => OnDeleteButtonClick(product))">
+                        </RadzenButton>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenStack>
+</RadzenStack>
+
+
+@code {
+
+    private IEnumerable<GetProductGridResponse> products = new List<GetProductGridResponse>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await LoadProducts();
+    }
+    
+
+    private async Task LoadProducts()
+    {
+        products = await Sender.Send(new GetProductGridQuery());
+    }
+
+    private async Task OnNewButtonClick()
+    {
+        var product = new GetProductGridResponse();
+        await OpenEditor(product);
+    }
+
+    private async Task OnEditButtonClick(GetProductGridResponse product)
+    {
+        await OpenEditor(product);
+    }
+
+    private async Task OnDeleteButtonClick(GetProductGridResponse product)
+    {
+        var result = await DialogService.OpenAsync("Are you sure?", ds =>
+            @<RadzenStack>
+                <span>The selected product will be deleted.</span>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                    <RadzenButton
+                        Text="Cancel"
+                        Variant="Variant.Outlined"
+                        Click="() => ds.Close(false)"></RadzenButton>
+                    <RadzenButton
+                        Text="Confirm"
+                        ButtonStyle="ButtonStyle.Danger"
+                        Click="() => ds.Close(true)"></RadzenButton>
+                </RadzenStack>
+            </RadzenStack>);
+
+        if (result)
+        {
+            await Sender.Send(new DeleteProductCommand(product.Id));
+            await LoadProducts();
+        }
+    }
+
+    private async Task OnEditorSave()
+    {
+        DialogService.Close();
+        await LoadProducts();
+    }
+
+    private void OnEditorCancel()
+    {
+        DialogService.Close();
+    }
+
+    private async Task OpenEditor(GetProductGridResponse product)
+    {
+        await DialogService.OpenAsync<ProductEditor>($"Edit",
+            new Dictionary<string, object>() { { "Products", new List<ProductEditorModel>
+            {
+                new ProductEditorModel()
+                {
+                    Id = product.Id == 0 ? null : product.Id,
+                    Name = product.Name,
+                    Quantity = product.Quantity,
+                    Category = product.Category,
+                    UnitOfMeasure = product.UnitOfMeasure
+                }
+            } }, 
+                {"OnSave", EventCallback.Factory.Create(this, OnEditorSave) },
+                {"OnCancel", EventCallback.Factory.Create(this, OnEditorCancel)}
+            },
+            new DialogOptions() 
+            {
+                Resizable = true, 
+                Draggable = true,
+                CloseDialogOnOverlayClick = true,
+                Width = "660px"
+            });
+    }
+}

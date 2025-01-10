@@ -1,0 +1,121 @@
+@using MediatR
+@using Radzen
+@using Void.Chef.Features.Categories.Queries
+@using Void.Chef.Features.Shared.Dtos
+@using Void.Chef.Features.UnitOfMeasures.Queries
+@using Radzen.Blazor;
+@using Void.Chef.Features.Products.Commands
+@inject ISender Sender
+@inject DialogService DialogService
+
+    @foreach (var product in Products)
+    {
+        <RadzenStack>
+        <RadzenRow>
+            <RadzenColumn>
+                <RadzenFormField Text="Name" Style="width: 100%">
+                    <RadzenTextBox @bind-Value="product.Name"></RadzenTextBox>
+                </RadzenFormField>
+
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow Gap="1rem">
+                
+                <RadzenColumn>
+                    <RadzenFormField Text="Quantity">
+                        <RadzenNumeric @bind-Value="product.Quantity"></RadzenNumeric>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenFormField Text="Unit of measure">
+                        <RadzenDropDown @bind-Value="product.UnitOfMeasure"
+                                        Data="_unitOfMeasures"
+                                        TextProperty="Name"></RadzenDropDown>
+                    </RadzenFormField>
+                </RadzenColumn>
+            <RadzenColumn>
+                <RadzenFormField Text="Category">
+                    <RadzenDropDown @bind-Value="product.Category"
+                                    Data="_categories"
+                                    TextProperty="Name"></RadzenDropDown>
+                </RadzenFormField>
+            </RadzenColumn>
+            </RadzenRow>
+        </RadzenStack>
+    }
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem" Style="margin-top: 1rem">
+        <RadzenButton
+            Text="Cancel"
+            Click="@OnSave"
+            Variant="Variant.Outlined"
+        ></RadzenButton>
+        <RadzenButton
+            Text="Save"
+            Click="@OnSave"></RadzenButton>
+    </RadzenStack>
+
+@code {
+
+    [Parameter] public IEnumerable<ProductEditorModel> Products { get; set; } = new List<ProductEditorModel>();
+    
+    [Parameter] public EventCallback OnSave { get; set; }
+    
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private IEnumerable<SimpleLookup> _categories = new List<SimpleLookup>();
+    private IEnumerable<SimpleLookup> _unitOfMeasures = new List<SimpleLookup>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await Sender.Send(new GetCategoriesQuery());
+        _unitOfMeasures = await Sender.Send(new GetUnitOfMeasuresQuery());
+    }
+
+    private async Task OnSaveButtonClick(ProductEditorModel product)
+    {
+        if (product.Id is null)
+        {
+            await Insert(product);
+        }
+        else
+        {
+            await Update(product);
+        }
+    }
+
+    private async Task OnCancelButtonClick()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task Update(ProductEditorModel product)
+    {
+        var request = new UpdateProductCommand()
+        {
+            Id = product.Id ?? 0,
+            Name = product.Name!,
+            Quantity = product.Quantity ?? 0,
+            UnitOfMeasureId = product.UnitOfMeasure?.Id ?? 0,
+            CategoryId = product.Category?.Id ?? 0
+        };
+
+        await Sender.Send(request);
+
+        await OnSave.InvokeAsync();
+    }
+    
+    private async Task Insert(ProductEditorModel product)
+    {
+        var request = new CreateProductCommand()
+        {
+            Name = product.Name!,
+            Quantity = product.Quantity ?? 0,
+            UnitOfMeasureId = product.UnitOfMeasure?.Id ?? 0,
+            CategoryId = product.Category?.Id ?? 0
+        };
+
+        await Sender.Send(request);
+
+        await OnSave.InvokeAsync();
+    }
+}
