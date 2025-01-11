@@ -1,10 +1,22 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
 using Radzen;
 using Void.Chef.Components;
 using Void.Chef.Data;
+using Void.Chef.Features.Shared.Services;
+using Void.Chef.Options;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOptions<ChatCompletionModelOptions>()
+    .Bind(builder.Configuration.GetSection($"AI:{ChatCompletionModelOptions.Position}"));
+
+builder.Services.AddKeyedSingleton<IChatCompletionService>("Chef", 
+    (provider, o) => new ChatCompletionService(
+        provider.GetRequiredService<IOptions<ChatCompletionModelOptions>>()));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {

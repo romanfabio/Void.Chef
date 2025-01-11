@@ -1,0 +1,15 @@
+.msg-box {
+    border-radius: 10px;
+    color: white;
+    padding: 15px;
+    max-width: 80%;
+    margin: 10px 0;
+}
+
+.user-msg-box {
+    background-color: #1b6ec2;
+}
+
+.chef-msg-box {
+    background-color: slategrey;
+}

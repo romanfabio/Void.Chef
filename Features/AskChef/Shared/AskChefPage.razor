@@ -1,0 +1,60 @@
+@page "/ask-chef"
+@using MediatR
+@using Radzen
+@using Radzen.Blazor
+@using Void.Chef.Features.AskChef.Queries
+@inject ISender Sender
+
+<h1>Ask Chef</h1>
+
+<RadzenStack Style="overflow-y: auto; height: 100%">
+    <RadzenStack Style="overflow-y: auto; height: 100%">
+        <div style="overflow-y: auto; height: 100%">
+            @foreach (var message in _history)
+            {
+                <RadzenStack
+                    Orientation="Orientation.Horizontal"
+                    JustifyContent="@(message.SentByUser ? JustifyContent.End : JustifyContent.Start)">
+                    <div class="msg-box @(message.SentByUser? "user-msg-box":"chef-msg-box")">
+                        <span>@message.Content</span>
+                    </div>
+                </RadzenStack>
+            }
+        </div>
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+        <RadzenTextArea 
+            Style="width: 100%" 
+            @bind-Value="_question"
+            ></RadzenTextArea>
+        <div>
+            <RadzenButton
+                Text="Send"
+                Click="@OnSendButtonClick"
+            ></RadzenButton>
+        </div>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+
+    private IList<ChefChatMessage> _history = new List<ChefChatMessage>();
+    private string? _question;
+
+    private async Task OnSendButtonClick()
+    {
+        if (!string.IsNullOrWhiteSpace(_question))
+        {
+            _history.Add(new() {Content = _question, SentByUser = true});
+            _question = null;
+            var answer = await Sender.Send(new GetAnswerQuery()
+            {
+                History = _history
+            });
+            
+            _history.Add(answer);
+        }
+    }
+
+
+}
