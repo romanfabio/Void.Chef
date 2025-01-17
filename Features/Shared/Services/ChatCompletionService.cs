@@ -1,5 +1,9 @@
 using System.ClientModel;
 using System.Collections.Immutable;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -43,10 +47,28 @@ public class ChatCompletionService : IChatCompletionService
             .ToImmutableList();
     }
 
-    public IAsyncEnumerable<StreamingChatMessageContent> GetStreamingChatMessageContentsAsync(ChatHistory chatHistory,
+    public async IAsyncEnumerable<StreamingChatMessageContent> GetStreamingChatMessageContentsAsync(ChatHistory chatHistory,
         PromptExecutionSettings? executionSettings = null, Kernel? kernel = null,
         CancellationToken cancellationToken = new CancellationToken())
     {
-        throw new NotImplementedException();
+        var request = ChatRequest.FromChatHistory(chatHistory, executionSettings);
+        request.Stream = true;
+        
+        using var httpClient = new HttpClient();
+        
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, _options.Endpoint);
+        httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        httpRequest.Content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        using var httpResponse = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+        httpResponse.EnsureSuccessStatusCode();
+       
+        var responseStream = await httpResponse.Content.ReadAsStreamAsync(cancellationToken);
+
+        await foreach (var content in System.Net.ServerSentEvents.SseParser.Create(responseStream).EnumerateAsync(cancellationToken))
+        {
+            yield return new StreamingChatMessageContent(AuthorRole.Assistant, content.Data);
+        }
+        
     }
 }

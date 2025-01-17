@@ -19,6 +19,7 @@
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
       <PackageReference Include="Microsoft.SemanticKernel" Version="1.33.0" />
       <PackageReference Include="Radzen.Blazor" Version="5.7.3" />
+      <PackageReference Include="System.Net.ServerSentEvents" Version="9.0.1" />
     </ItemGroup>
 
     <ItemGroup>
