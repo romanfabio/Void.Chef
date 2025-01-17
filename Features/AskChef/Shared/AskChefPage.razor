@@ -1,5 +1,6 @@
 @page "/ask-chef"
 @using MediatR
+@using Microsoft.SemanticKernel
 @using Radzen
 @using Radzen.Blazor
 @using Void.Chef.Features.AskChef.Queries
@@ -17,6 +18,16 @@
                     JustifyContent="@(message.SentByUser ? JustifyContent.End : JustifyContent.Start)">
                     <div class="msg-box @(message.SentByUser? "user-msg-box":"chef-msg-box")">
                         <span>@message.Content</span>
+                    </div>
+                </RadzenStack>
+            }
+            @if (cumulatedResponse.Length > 0)
+            {
+                <RadzenStack
+                    Orientation="Orientation.Horizontal"
+                    JustifyContent="JustifyContent.Start">
+                    <div class="msg-box chef-msg-box">
+                        <span>@cumulatedResponse</span>
                     </div>
                 </RadzenStack>
             }
@@ -41,20 +52,46 @@
     private IList<ChefChatMessage> _history = new List<ChefChatMessage>();
     private string? _question;
 
+    private string cumulatedResponse = string.Empty;
+
     private async Task OnSendButtonClick()
     {
         if (!string.IsNullOrWhiteSpace(_question))
         {
-            _history.Add(new() {Content = _question, SentByUser = true});
-            _question = null;
-            var answer = await Sender.Send(new GetAnswerQuery()
-            {
-                History = _history
-            });
-            
-            _history.Add(answer);
+            await SendStreamingMessageToChef();
         }
     }
 
+    private async Task SendMessageToChef()
+    {
+        _history.Add(new() {Content = _question, SentByUser = true});
+        _question = null;
+        var answer = await Sender.Send(new GetAnswerQuery()
+        {
+            History = _history
+        });
+            
+        _history.Add(answer);
+    }
 
+    private async Task SendStreamingMessageToChef()
+    {
+        _history.Add(new() {Content = _question, SentByUser = true});
+        _question = null;
+        cumulatedResponse = "";
+        await foreach (var chunk in await Sender.Send(new GetStreamAnswerQuery()
+                       {
+                           History = _history
+                       }))
+        {
+            cumulatedResponse += chunk;
+            
+            StateHasChanged();
+        }
+        
+        _history.Add(new(){Content = cumulatedResponse, SentByUser = false});
+        cumulatedResponse = "";
+        StateHasChanged();
+
+    }
 }
