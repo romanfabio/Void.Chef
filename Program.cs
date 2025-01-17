@@ -1,4 +1,5 @@
 using System.Reflection;
+using Ganss.Xss;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
@@ -13,6 +14,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOptions<ChatCompletionModelOptions>()
     .Bind(builder.Configuration.GetSection($"AI:{ChatCompletionModelOptions.Position}"));
+
+builder.Services.AddScoped<IHtmlSanitizer, HtmlSanitizer>(x =>
+{
+    var sanitizer = new Ganss.Xss.HtmlSanitizer();
+    sanitizer.AllowedAttributes.Add("class");
+    return sanitizer;
+});
 
 builder.Services.AddKeyedSingleton<IChatCompletionService>("Chef", 
     (provider, o) => new ChatCompletionService(
