@@ -1,10 +1,13 @@
 @page "/ask-chef"
+@using Ganss.Xss
+@using Markdig
 @using MediatR
 @using Microsoft.SemanticKernel
 @using Radzen
 @using Radzen.Blazor
 @using Void.Chef.Features.AskChef.Queries
 @inject ISender Sender
+@inject IHtmlSanitizer HtmlSanitizer
 
 <h1>Ask Chef</h1>
 
@@ -17,7 +20,7 @@
                     Orientation="Orientation.Horizontal"
                     JustifyContent="@(message.SentByUser ? JustifyContent.End : JustifyContent.Start)">
                     <div class="msg-box @(message.SentByUser? "user-msg-box":"chef-msg-box")">
-                        <span>@message.Content</span>
+                        <span>@ConvertMarkdownStringToHtml(message.Content)</span>
                     </div>
                 </RadzenStack>
             }
@@ -27,7 +30,7 @@
                     Orientation="Orientation.Horizontal"
                     JustifyContent="JustifyContent.Start">
                     <div class="msg-box chef-msg-box">
-                        <span>@cumulatedResponse</span>
+                        <span>@ConvertMarkdownStringToHtml(cumulatedResponse)</span>
                     </div>
                 </RadzenStack>
             }
@@ -93,5 +96,19 @@
         cumulatedResponse = "";
         StateHasChanged();
 
+    }
+
+    private MarkupString ConvertMarkdownStringToHtml(string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            var html = Markdig.Markdown.ToHtml(value, new MarkdownPipelineBuilder().UseAdvancedExtensions().Build());
+
+            var sanitizedHtml = HtmlSanitizer.Sanitize(html);
+
+            return new MarkupString(sanitizedHtml);
+        }
+
+        return new MarkupString();
     }
 }
