@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>Void.Chef.Application</RootNamespace>
+        <AssemblyName>Void.Chef.Application</AssemblyName>
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+    </ItemGroup>
+</Project>
