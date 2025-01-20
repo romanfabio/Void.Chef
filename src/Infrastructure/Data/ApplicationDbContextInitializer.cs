@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Void.Chef.Domain.Entities;
+using Void.Chef.Domain.ValueObjects;
 
 namespace Void.Chef.Infrastructure.Data;
 
@@ -62,22 +63,13 @@ public class ApplicationDbContextInitializer(
             await context.SaveChangesAsync();
         }
 
-        if (!context.UnitOfMeasures.Any())
-        {
-            context.UnitOfMeasures.Add(new UnitOfMeasure() { Name = "Kilogram", PluralName = "Kilograms" });
-            context.UnitOfMeasures.Add(new UnitOfMeasure() { Name = "Gram", PluralName = "Grams" });
-            context.UnitOfMeasures.Add(new UnitOfMeasure() { Name = "Item", PluralName = "Items" });
-            
-            await context.SaveChangesAsync();
-        }
-
         if (!context.Products.Any())
         {
             context.Products.Add(new Product()
             {
                 Name = "Apple", 
                 Quantity = 4,
-                UnitOfMeasure = await context.UnitOfMeasures.SingleAsync(u => u.Name == "Item"),
+                UnitOfMeasure = UnitOfMeasure.Item,
                 Category = await context.Categories.SingleAsync(c => c.Name == "Fruits"),
             });
 
@@ -85,7 +77,7 @@ public class ApplicationDbContextInitializer(
             {
                 Name = "Chicken", 
                 Quantity = 1.5f,
-                UnitOfMeasure = await context.UnitOfMeasures.SingleAsync(u => u.Name == "Kilogram"),
+                UnitOfMeasure = UnitOfMeasure.Kilogram,
                 Category = await context.Categories.SingleAsync(c => c.Name == "Meats"),
             });
 

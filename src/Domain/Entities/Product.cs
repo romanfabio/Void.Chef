@@ -1,4 +1,5 @@
 using Void.Chef.Domain.Common;
+using Void.Chef.Domain.ValueObjects;
 
 namespace Void.Chef.Domain.Entities;
 

@@ -10,8 +10,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<Product> Products => Set<Product>();
     
-    public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
-    
     public DbSet<Category> Categories => Set<Category>();
 
     protected override void OnModelCreating(ModelBuilder builder)
