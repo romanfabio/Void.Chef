@@ -53,11 +53,41 @@ public class ApplicationDbContextInitializer(
     private async Task TrySeedAsync()
     {
 
+        if (!context.Categories.Any())
+        {
+            context.Categories.Add(new Category() { Name = "Fruits" });
+            context.Categories.Add(new Category() { Name = "Meats" });
+            context.Categories.Add(new Category() { Name = "Vegetables" });
+            
+            await context.SaveChangesAsync();
+        }
+
+        if (!context.UnitOfMeasures.Any())
+        {
+            context.UnitOfMeasures.Add(new UnitOfMeasure() { Name = "Kilogram", PluralName = "Kilograms" });
+            context.UnitOfMeasures.Add(new UnitOfMeasure() { Name = "Gram", PluralName = "Grams" });
+            context.UnitOfMeasures.Add(new UnitOfMeasure() { Name = "Item", PluralName = "Items" });
+            
+            await context.SaveChangesAsync();
+        }
+
         if (!context.Products.Any())
         {
-            context.Products.Add(new Product() { Name = "Apple", Quantity = 4 });
+            context.Products.Add(new Product()
+            {
+                Name = "Apple", 
+                Quantity = 4,
+                UnitOfMeasure = await context.UnitOfMeasures.SingleAsync(u => u.Name == "Item"),
+                Category = await context.Categories.SingleAsync(c => c.Name == "Fruits"),
+            });
 
-            context.Products.Add(new Product() { Name = "Milk", Quantity = 1.5f });
+            context.Products.Add(new Product()
+            {
+                Name = "Chicken", 
+                Quantity = 1.5f,
+                UnitOfMeasure = await context.UnitOfMeasures.SingleAsync(u => u.Name == "Kilogram"),
+                Category = await context.Categories.SingleAsync(c => c.Name == "Meats"),
+            });
 
             await context.SaveChangesAsync();
         }
