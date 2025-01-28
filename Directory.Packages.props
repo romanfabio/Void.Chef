@@ -9,5 +9,12 @@
         <PackageReference Include="AutoMapper" Version="13.0.1" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.1" />
         <PackageReference Include="Ardalis.GuardClauses" Version="5.0.0" />
+        
+        <PackageReference Include="NUnit" Version="4.3.2" />
+        <PackageReference Include="FluentAssertions" Version="8.0.1" />
+        <PackageReference Include="coverlet.collector" Version="6.0.0"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
+        <PackageReference Include="NUnit.Analyzers" Version="4.6.0"/>
+        <PackageReference Include="NUnit3TestAdapter" Version="4.6.0"/>
     </ItemGroup>
 </Project>
