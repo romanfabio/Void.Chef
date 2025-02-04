@@ -1,39 +1,48 @@
+﻿using System.Runtime.InteropServices;
+using Bogus;
+using Void.Chef.Domain.Entities;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Void.Chef.Domain.Entities;
-using Void.Chef.Domain.ValueObjects;
 
 namespace Void.Chef.Infrastructure.Data;
 
 public static class InitializerExtensions
 {
-    public static async Task InitializeDatabaseAsync(this WebApplication app)
+    public static async Task InitialiseDatabaseAsync(this WebApplication app)
     {
         using var scope = app.Services.CreateScope();
 
         var initializer = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitializer>();
 
-        await initializer.InitializeAsync();
+        await initializer.InitialiseAsync();
 
         await initializer.SeedAsync();
     }
 }
 
-public class ApplicationDbContextInitializer(
-    ILogger<ApplicationDbContextInitializer> logger,
-    ApplicationDbContext context)
+public class ApplicationDbContextInitializer
 {
-    public async Task InitializeAsync()
+    private readonly ILogger<ApplicationDbContextInitializer> _logger;
+    private readonly ApplicationDbContext _context;
+
+    public ApplicationDbContextInitializer(ILogger<ApplicationDbContextInitializer> logger, ApplicationDbContext context)
+    {
+        _logger = logger;
+        _context = context;
+    }
+
+    public async Task InitialiseAsync()
     {
         try
         {
-            await context.Database.MigrateAsync();
+            await _context.Database.MigrateAsync();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred while initialising the database.");
+            _logger.LogError(ex, "An error occurred while initialising the database.");
             throw;
         }
     }
@@ -46,42 +55,28 @@ public class ApplicationDbContextInitializer(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred while seeding the database.");
+            _logger.LogError(ex, "An error occurred while seeding the database.");
             throw;
         }
     }
 
-    private async Task TrySeedAsync()
+    public async Task TrySeedAsync()
     {
+        
 
-        if (!context.Categories.Any())
+        // Default data
+        // Seed, if necessary
+        if (!_context.Products.Any())
         {
-            context.Categories.Add(new Category() { Name = "Fruits" });
-            context.Categories.Add(new Category() { Name = "Meats" });
-            context.Categories.Add(new Category() { Name = "Vegetables" });
-            
-            await context.SaveChangesAsync();
-        }
+            var productFaker = new Faker<Product>()
+                .RuleFor(p => p.Name, f => f.Commerce.ProductName());
 
-        if (!context.Products.Any())
-        {
-            context.Products.Add(new Product()
+            foreach (var product in productFaker.Generate(100))
             {
-                Name = "Apple", 
-                Quantity = 4,
-                UnitOfMeasure = UnitOfMeasure.Item,
-                Category = await context.Categories.SingleAsync(c => c.Name == "Fruits"),
-            });
+                _context.Products.Add(product);
+            }
 
-            context.Products.Add(new Product()
-            {
-                Name = "Chicken", 
-                Quantity = 1.5f,
-                UnitOfMeasure = UnitOfMeasure.Kilogram,
-                Category = await context.Categories.SingleAsync(c => c.Name == "Meats"),
-            });
-
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
         }
     }
 }

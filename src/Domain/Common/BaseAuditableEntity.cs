@@ -1,4 +1,4 @@
-namespace Void.Chef.Domain.Common;
+﻿namespace Void.Chef.Domain.Common;
 
 public abstract class BaseAuditableEntity : BaseEntity
 {

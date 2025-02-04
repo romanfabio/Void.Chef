@@ -1,4 +1,5 @@
-using Ardalis.GuardClauses;
+﻿using Ardalis.GuardClauses;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -19,16 +20,22 @@ public static class DependencyInjection
 
         services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
         services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
+
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
+
             options.UseSqlServer(connectionString);
         });
-
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<ApplicationDbContextInitializer>();
+
+        services.AddAuthentication()
+            .AddBearerToken(IdentityConstants.BearerScheme);
+
+        services.AddAuthorizationBuilder();
 
         services.AddSingleton(TimeProvider.System);
 

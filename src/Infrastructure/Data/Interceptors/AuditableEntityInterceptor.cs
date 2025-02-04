@@ -1,12 +1,21 @@
+﻿using Void.Chef.Application.Common.Interfaces;
+using Void.Chef.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Void.Chef.Domain.Common;
 
 namespace Void.Chef.Infrastructure.Data.Interceptors;
 
-public class AuditableEntityInterceptor(TimeProvider dateTime) : SaveChangesInterceptor
+public class AuditableEntityInterceptor : SaveChangesInterceptor
 {
+    private readonly TimeProvider _dateTime;
+
+    public AuditableEntityInterceptor(
+        TimeProvider dateTime)
+    {
+        _dateTime = dateTime;
+    }
+
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
         UpdateEntities(eventData.Context);
@@ -21,7 +30,7 @@ public class AuditableEntityInterceptor(TimeProvider dateTime) : SaveChangesInte
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    private void UpdateEntities(DbContext? context)
+    public void UpdateEntities(DbContext? context)
     {
         if (context == null) return;
 
@@ -29,7 +38,7 @@ public class AuditableEntityInterceptor(TimeProvider dateTime) : SaveChangesInte
         {
             if (entry.State is EntityState.Added or EntityState.Modified || entry.HasChangedOwnedEntities())
             {
-                var utcNow = dateTime.GetUtcNow();
+                var utcNow = _dateTime.GetUtcNow();
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.Created = utcNow;
