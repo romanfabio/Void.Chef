@@ -1,7 +1,10 @@
 ﻿# For more info on HTTP files go to https://aka.ms/vs/httpfile
 @Web_HostAddress = https://localhost:5001
 
-@BearerToken=kewjeoifhe44r4
+# GET Health
+GET {{Web_HostAddress}}/health
+
+###
 
 # GET Products
 @PageNumber = 1
