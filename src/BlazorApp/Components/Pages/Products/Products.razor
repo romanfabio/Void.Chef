@@ -1,0 +1,67 @@
+@page "/Products"
+@using MediatR
+@using Void.Chef.Application.Products.Queries.GetProductsWithPagination
+@using Void.Chef.BlazorApp.Components.Pages.Products.Components
+
+@inject ISender Sender
+@inject IDialogService DialogService
+
+
+<div style="display: flex; justify-content: space-between">
+    <h1>Products</h1>    
+    <div>
+        <MudButton OnClick="OnNewButtonClick" Variant="Variant.Filled" Color="Color.Primary">New</MudButton>
+    </div>
+</div>
+
+
+<MudTable T="ProductBriefDto" @ref="Table" ServerData="LoadData" OnRowClick="OnRowClick" Striped="true">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+    </HeaderContent>    
+    <RowTemplate>   
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager></MudTablePager>
+    </PagerContent>
+</MudTable>
+
+@code {
+
+    private MudTable<ProductBriefDto> Table { get; set; } = null!;
+
+    private async Task<TableData<ProductBriefDto>> LoadData(TableState state, CancellationToken cancellationToken)
+    {
+        var products = await Sender.Send(new GetProductsWithPaginationQuery()
+        {
+            PageNumber = state.Page, PageSize = state.PageSize
+        }, cancellationToken);
+
+        return new TableData<ProductBriefDto>() { Items = products.Items, TotalItems = products.TotalCount };
+    }
+
+    private async Task OnRowClick(TableRowClickEventArgs<ProductBriefDto> e)
+    {
+        await OpenEditor(e.Item?.Id);
+    }   
+    
+    private async Task OpenEditor(int? id)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters<ProductEditor> { { x => x.Id, id } };
+
+        var dialog = await DialogService.ShowAsync<ProductEditor>("", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await Table.ReloadServerData();
+        }
+    }
+
+    private async Task OnNewButtonClick(MouseEventArgs e)
+    {
+        await OpenEditor(null);
+    }
+}

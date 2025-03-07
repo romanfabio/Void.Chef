@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <RootNamespace>Void.Chef.BlazorApp</RootNamespace>
+        <AssemblyName>Void.Chef.BlazorApp</AssemblyName>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="MudBlazor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Application\Application.csproj" />
+      <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

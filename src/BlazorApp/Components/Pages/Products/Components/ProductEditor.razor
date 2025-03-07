@@ -1,0 +1,102 @@
+@using MediatR
+@using Void.Chef.Application.Products.Commands.CreateProduct
+@using Void.Chef.Application.Products.Commands.DeleteProduct
+@using Void.Chef.Application.Products.Commands.UpdateProduct
+@using Void.Chef.Application.Products.Queries.GetProductById
+@inject ISender Sender
+
+<MudDialog>
+    <TitleContent>
+        @(Id is null ? "New":"Edit") product
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_value.Name" Label="Name" Required="true"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        @if (Id is not null)
+        {
+            <MudButton Color="Color.Error" OnClick="Delete">Delete</MudButton>
+        }
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    
+    [Parameter]
+    public int? Id { get; set; }
+
+    private ProductEditorValue _value = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is not null)
+        {
+            _value = await LoadData(Id ?? 0);
+        }
+    }
+
+    private async Task<ProductEditorValue> LoadData(int id)
+    {
+        var product = await Sender.Send(new GetProductByIdQuery(id));
+
+        return new ProductEditorValue()
+        {
+            Id = product.Id,
+            Name = product.Name
+        };
+    }
+
+    private async Task Delete()
+    {
+        if (Id is null)
+        {
+            return;
+        }
+        
+        var request = new DeleteProductCommand(Id ?? 0);
+
+        await Sender.Send(request);
+        
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    
+    private async Task Submit()
+    {
+        
+        if (Id is null)
+        {
+            var request = new CreateProductCommand()
+            {
+                Name = _value.Name
+            };
+
+            await Sender.Send(request);
+        }
+        else
+        {
+            var request = new UpdateProductCommand()
+            {
+                Id = Id ?? 0,
+                Name = _value.Name
+            };
+
+            await Sender.Send(request);
+        }
+        
+        MudDialog.Close(DialogResult.Ok(true));
+    } 
+
+    private void Cancel() => MudDialog.Cancel();
+
+    public class ProductEditorValue
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; } = null!;
+        
+    }
+}

@@ -30,5 +30,6 @@
     <PackageVersion Include="Respawn" Version="6.2.1" />
     <PackageVersion Include="Testcontainers.MsSql" Version="3.9.0" />
     <PackageVersion Include="Bogus" Version="35.6.1" />
+    <PackageVersion Include="MudBlazor" Version="8.3.0" />
   </ItemGroup>
 </Project>
