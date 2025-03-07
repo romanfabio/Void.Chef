@@ -7,7 +7,7 @@
 
 <MudDialog>
     <TitleContent>
-        @(Id is null ? "New":"Edit") product
+        <h2>@(Id is null ? "New":"Edit") product</h2>
     </TitleContent>
     <DialogContent>
         <MudTextField @bind-Value="_value.Name" Label="Name" Required="true"></MudTextField>

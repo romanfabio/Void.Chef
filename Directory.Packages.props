@@ -31,5 +31,6 @@
     <PackageVersion Include="Testcontainers.MsSql" Version="3.9.0" />
     <PackageVersion Include="Bogus" Version="35.6.1" />
     <PackageVersion Include="MudBlazor" Version="8.3.0" />
+    <PackageVersion Include="Microsoft.SemanticKernel" Version="1.40.1" />
   </ItemGroup>
 </Project>
