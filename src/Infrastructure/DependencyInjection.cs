@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Void.Chef.Application.Common.Interfaces;
 using Void.Chef.Infrastructure.Data;
 using Void.Chef.Infrastructure.Data.Interceptors;
+using Void.Chef.Infrastructure.SemanticKernel;
 
 namespace Void.Chef.Infrastructure;
 
@@ -38,6 +39,9 @@ public static class DependencyInjection
         services.AddAuthorizationBuilder();
 
         services.AddSingleton(TimeProvider.System);
+        
+        services.Configure<OllamaSemanticKernelSettings>(configuration.GetSection("SemanticKernel:Ollama"));
+        services.AddScoped<ISemanticKernelService, OllamaSemanticKernelService>();
 
         return services;
     }

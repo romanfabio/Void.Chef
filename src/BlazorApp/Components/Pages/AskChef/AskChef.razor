@@ -1,6 +1,108 @@
 @page "/ask-chef"
-<h3>AskChef</h3>
+@using MediatR
+@using Microsoft.SemanticKernel.ChatCompletion
+@using Void.Chef.Application.Chef.Queries.AskChefWithProducts
+@using Void.Chef.Application.Chef.Queries.GetChatCompletion
+@using Void.Chef.BlazorApp.Utils
+
+@inject ISender Sender
+@inject ISnackbar SnackBar
+@inject ILogger<AskChef> Logger
+
+<h1>Ask Chef</h1>
+
+<div style="display: flex; flex-direction: column; overflow-y: auto; height: 100%">
+    @foreach (var message in _chatHistory)
+    {
+        if (message.Role == AuthorRole.User || message.Role == AuthorRole.Assistant)
+        {
+            <div class="chef-message-row chef-@(message.Role == AuthorRole.User ? "user" : "assistant")-message-row">
+                <div class="chef-message-box chef-@(message.Role == AuthorRole.User ? "user" : "assistant")-message-box">
+                    <p>@message.Items[0]</p>
+                </div>
+            </div>
+        }
+
+    }
+    @if (_answer is not null)
+    {
+        <div class="chef-message-row chef-assistant-message-row">
+            <div class="chef-message-box chef-assistant-message-box">
+                <p>@_answer</p>
+            </div>
+        </div>
+    }
+</div>
+
+<div style="display: flex; gap: 10px; margin-top: 10px; padding: 10px; border: 1px solid lightgray; border-radius: 5px">
+    <MudTextField
+        @bind-Value="_input"
+        Placeholder="Ask something..."
+        Immediate="true"
+        AutoFocus="true"
+        AutoGrow="true"
+        MaxLines="10"
+        ReadOnly="_loadingManager.IsLoading"
+        ></MudTextField>
+    <MudButton
+        Color="Color.Primary"
+        Variant="Variant.Filled"
+        Disabled="_loadingManager.IsLoading"
+        OnClick="OnSendClick">Send</MudButton>
+</div>
+
 
 @code {
+    LoadingManager _loadingManager = new();
     
+    ChatHistory _chatHistory = new ChatHistory();
+
+    string? _answer = null;
+
+    string _input = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _chatHistory = await Sender.Send(new GetHistoryWithProductsQuery());
+    }
+
+    private async Task GetStreamResponse(ChatHistory history)
+    {
+        _loadingManager.IsLoading = true;
+        _answer = "";
+        try
+        {
+            await foreach (var chunk in await Sender.Send(new GetChatCompletionQuery(history)))
+            {
+                _answer += chunk.Content;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "An error occured while getting chef's response");
+            SnackBar.Add("An error occured while getting chef's response", Severity.Error);
+        }
+        finally
+        {
+            _loadingManager.IsLoading = false;
+        }
+
+        _chatHistory.AddAssistantMessage(_answer);
+        _answer = null;
+    }
+
+    private async Task OnSendClick()
+    {
+        if (string.IsNullOrWhiteSpace(_input))
+            return;
+
+        _chatHistory.AddUserMessage(_input);
+        _input = "";
+        
+        StateHasChanged();
+
+        await GetStreamResponse(_chatHistory);
+    }
+
 }

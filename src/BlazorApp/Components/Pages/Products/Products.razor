@@ -7,7 +7,7 @@
 @inject IDialogService DialogService
 
 
-<div style="display: flex; justify-content: space-between">
+<div style="display: flex; justify-content: space-between; margin-bottom: 10px">
     <h1>Products</h1>    
     <div>
         <MudButton OnClick="OnNewButtonClick" Variant="Variant.Filled" Color="Color.Primary">New</MudButton>
@@ -15,7 +15,15 @@
 </div>
 
 
-<MudTable T="ProductBriefDto" @ref="Table" ServerData="LoadData" OnRowClick="OnRowClick" Striped="true">
+<MudTable 
+    T="ProductBriefDto" 
+    @ref="Table" 
+    Height="100%"
+    ServerData="LoadData" 
+    OnRowClick="OnRowClick" 
+    Striped="true"
+    FixedHeader="true"
+    FixedFooter="true">
     <HeaderContent>
         <MudTh>Name</MudTh>
     </HeaderContent>    

@@ -25,7 +25,7 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, P
 
     public async Task<ProductDto> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
-        var product = await _context.Products.SingleOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var product = await _context.Products.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         Guard.Against.NotFound(request.Id, product);
 

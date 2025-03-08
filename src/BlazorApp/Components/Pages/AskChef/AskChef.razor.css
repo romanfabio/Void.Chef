@@ -1,0 +1,27 @@
+.chef-message-row {
+    display: flex;
+    padding: 10px 0px;
+}
+
+.chef-user-message-row {
+    justify-content: end;
+}
+
+.chef-assistant-message-row {
+    justify-content: start;
+}
+
+.chef-message-box {
+    max-width: 80%;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.chef-user-message-box {
+    background-color: cornflowerblue;
+    color: white;
+}
+
+.chef-assistant-message-box {
+    background-color: lightgray;
+}

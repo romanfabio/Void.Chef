@@ -17,6 +17,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.SemanticKernel" />
+    <PackageReference Include="OllamaSharp" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Ollama" />
     
     <PackageReference Include="Bogus" />
   </ItemGroup>

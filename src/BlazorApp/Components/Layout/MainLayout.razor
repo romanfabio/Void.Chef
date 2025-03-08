@@ -13,16 +13,16 @@
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-        <NavMenu />
-    </MudDrawer>
-    <MudMainContent>
-        <MudContainer>
-            <div style="padding-bottom: 10px; padding-top: 10px">
-                @Body
-            </div>
-        </MudContainer>
-    </MudMainContent>
+    
+        <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+            <NavMenu />
+        </MudDrawer>
+        <MudMainContent Style="height: 100%;">
+            <MudContainer Style="height: 100%; display: flex; flex-direction: column; padding-top: 10px; padding-bottom: 10px">
+                    @Body
+            </MudContainer>
+        </MudMainContent>
+    
 </MudLayout>
 
 @code {
