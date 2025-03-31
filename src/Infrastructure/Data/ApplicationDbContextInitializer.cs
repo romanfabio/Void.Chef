@@ -62,8 +62,6 @@ public class ApplicationDbContextInitializer
 
     public async Task TrySeedAsync()
     {
-        
-
         // Default data
         // Seed, if necessary
         if (!_context.Products.Any())
@@ -79,4 +77,6 @@ public class ApplicationDbContextInitializer
             await _context.SaveChangesAsync();
         }
     }
+
+
 }

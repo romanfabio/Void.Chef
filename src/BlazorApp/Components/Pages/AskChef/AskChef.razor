@@ -1,16 +1,27 @@
 @page "/ask-chef"
 @using MediatR
 @using Microsoft.SemanticKernel.ChatCompletion
+@using Void.Chef.Application.Chef.Commands.CreateChat
+@using Void.Chef.Application.Chef.Commands.CreateChatMessage
 @using Void.Chef.Application.Chef.Queries.AskChefWithProducts
+@using Void.Chef.Application.Chef.Queries.GetChatById
 @using Void.Chef.Application.Chef.Queries.GetChatCompletion
+@using Void.Chef.Application.Chef.Queries.GetChats
 @using Void.Chef.BlazorApp.Utils
 
 @inject ISender Sender
 @inject ISnackbar SnackBar
 @inject ILogger<AskChef> Logger
 
-<h1>Ask Chef</h1>
 
+<div>
+    <h1>Ask Chef</h1>
+    <MudButton
+        Color="Color.Primary"
+        Variant="Variant.Outlined"
+        Disabled="_loadingManager.IsLoading"
+        OnClick="OnNewChatClick">New Chat</MudButton>
+</div>
 <div style="display: flex; flex-direction: column; overflow-y: auto; height: 100%">
     @foreach (var message in _chatHistory)
     {
@@ -54,6 +65,8 @@
 
 @code {
     LoadingManager _loadingManager = new();
+
+    int _currentChatId = 0;
     
     ChatHistory _chatHistory = new ChatHistory();
 
@@ -63,6 +76,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var chats = await Sender.Send(new GetChatsQuery());
+        
         _chatHistory = await Sender.Send(new GetHistoryWithProductsQuery());
     }
 
@@ -102,7 +117,31 @@
         
         StateHasChanged();
 
+        await Sender.Send(new CreateChatMessageCommand()
+        {
+            Content = _input,
+            AuthorRole = AuthorRole.User,
+            ChatId = _currentChatId
+        });
+
         await GetStreamResponse(_chatHistory);
     }
 
+    private async Task OnNewChatClick()
+    {
+        _loadingManager.IsLoading = true;
+        try
+        {
+            var newHistoryId = await Sender.Send(new CreateChatCommand());
+
+            var newHistory = await Sender.Send(new GetChatByIdQuery(newHistoryId));
+
+            _chatHistory = newHistory;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "An error occured while creating a new chat");
+            SnackBar.Add("An error occured while creating a new chat", Severity.Error);
+        }
+    }
 }
